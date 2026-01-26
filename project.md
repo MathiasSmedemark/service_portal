@@ -1,239 +1,375 @@
-Project: Internal Support & Status Portal (Azure Databricks Apps)
+# Internal Support & Status Portal on Azure Databricks Apps
 
-Purpose
+You're building a service portal for a Databricks data platform that combines platform health + data freshness, support intake, and self-service documentation — all hosted as an Azure Databricks App with a FastAPI backend and React SPA frontend, backed by Delta tables only (for now).
 
-Provide one internal URL where platform users can:
-	•	See current platform health (Databricks + Power BI/Fabric) and data freshness
-	•	Submit incidents/bugs and improvement requests
-	•	Submit “my platform” service requests (access/change/onboarding)
-	•	Read user-facing documentation and a business glossary
-	•	See roadmap and status messages
+This is a solid direction because Databricks Apps gives you:
 
-Hosted as a Databricks App using FastAPI + React (SPA), with a Delta-only backend workflow for now.
+- A managed runtime for web apps (Python/Node available, FastAPI/uvicorn preinstalled).
+- A dedicated app service principal identity to read/write data and call Databricks APIs.
+- A reverse proxy that forwards a known set of `X-Forwarded-*` user identity headers to your app (useful for attribution).
+- Optional user authorization (OBO) in preview (via `x-forwarded-access-token`) if you later need user-scoped reads.
+- A supported way to control outbound traffic via Network Connectivity Configurations (NCC) and network policies when you later integrate with Power BI/Fabric APIs.
 
-⸻
+---
 
-Architecture (decisions reflected)
+## What the portal does
 
-Runtime & UI
-	•	Databricks App runs a FastAPI service that:
-	•	Serves REST endpoints for status and ticketing
-	•	Serves the built React SPA as static assets
-	•	This aligns with “bring-your-own-framework” approaches and existing FastAPI-on-Apps recipes and starters.  ￼	
-	❗ NEEDS DECISION:
-	•	React SPA build & deployment: Will you build as part of CI/CD and bundle into the App package, or serve from external storage?
-	•	CORS policy: Specify allowed origins if SPA is served separately.
-	•	API versioning: Will you version endpoints (/v1/status) or rely on backward compatibility?
-Authentication & identity
-	•	The app runs under the Databricks App service principal for “overall information” reads; Databricks injects the service principal credentials via environment variables DATABRICKS_CLIENT_ID / DATABRICKS_CLIENT_SECRET.  ￼
-	•	User attribution for submissions and voting is captured from request context (commonly forwarded user identity headers such as X-Forwarded-Email / X-Forwarded-User in Apps setups).  ￼
-	•	OBO (on-behalf-of-user) is explicitly not required now, but can be enabled later if you ever want user-permissioned reads; OBO uses X-Forwarded-Access-Token when enabled.  ￼	
-	❗ CRITICAL GAPS:
-	•	Header validation: How do you validate/trust X-Forwarded-* headers? Are they injected by Databricks security layer or user-provided?
-	•	Fallback identity: What happens if user headers are missing? Deny or use service principal?
-	•	Entra group membership: For user_platform_map, how fresh/reliable is this? Query live or snapshot?
-Status ingestion pattern (your preference)
-	•	The portal does not call external APIs at request time.
-	•	A scheduled job (every ~5 min) writes normalized results into Delta status tables; the app reads those tables.
-	
-	❗ CRITICAL GAPS:
-	•	Power BI/Fabric integration unclear: Which APIs will you use? Admin APIs? REST? How do you authenticate?
-	
-	❗ NEEDS DECISION:
-	•	Will NCC/network policies be in place before Phase 1? This blocks Power BI integration feasibility.
-	•	Databricks status source: Are you querying workspace APIs, SQL Warehouse health APIs, or job logs?
-	•	Failure handling: If a job fails/times out, does the app show stale data, or an error state?
-	•	Job observability: Where are job execution logs? How will ops detect failed ingestion?
-	•	5-min cadence feasibility: For external APIs (Power BI), will 5 min be throttled/blocked? Need to define realistic interval per source.
+### Core outcomes (user value)
 
-Networking (parked, but design-ready)
-	•	When you later connect to Power BI/Fabric APIs directly (or other services), Databricks Apps supports controlled outbound connectivity via Network Connectivity Configurations (NCC) and network policies.  ￼
+1. **Status & Health (MVP)**
+   - Global "green/yellow/red/unknown".
+   - Per platform tiles:
+     - last successful update
+     - freshness vs SLA
+     - active warnings/incidents
+   - Drill-down history and "last failure" diagnostics.
 
-⸻
+2. **Manual status messages (comms)**
+   - Banner messages with time windows, severity, affected platforms.
+   - Maintenance notices, incident updates, release notes.
 
-Features to develop (by module)
+3. **Ticket intake (Delta-only ticketing)**
+   - Incidents/bugs: structured submission + comments + workflow state machine.
+   - Improvements: feature requests + voting + workflow state machine.
+   - "My platform" requests: service-catalog-lite templates (access/onboarding/change).
 
-1) Status & front page (MVP value)
+4. **Docs + business glossary**
+   - Git-backed markdown docs rendered in-app.
+   - Delta-backed glossary with stewardship fields + search.
 
-User-facing
-	•	Global health indicator (green/yellow/red)
-	•	Per-domain/platform tiles:
-	•	“Last successful update”
-	•	“Freshness vs SLA”
-	•	“Current incidents / warnings”
-	•	Drill-down “Status details” page: check history, last failures, owners
+5. **Roadmap (Delta-only)**
+   - Curated roadmap items, Now/Next/Later, linked to requests.
 
-Backend	
-	❗ NEEDS CLARIFICATION:
-	•	SLA definition: How are thresholds defined? Hard-coded, per-platform config, or user-editable?
-	•	Health aggregation logic: If one platform fails, is global status red? Or weighted by importance?
-	•	Data retention: How long do you keep status_results? (affects query performance and cost)
-	•	Caching strategy: How often does the front page query vs cache? Stale acceptable threshold?	•	status_checks definitions (what to measure, SLA thresholds)
-	•	status_results time-series results (computed by jobs)
-	•	status_rollups (optional materialized rollups for fast UI)
-	
-	❗ NEEDS DECISION:
-	•	Who can create/publish? Admins only? Service owners? Approval workflow needed?
-	•	Can messages be edited after publish, or create new versions?
-	•	Archival: Keep old messages visible in history, or hide after end date?2) Status messages (manual comms)
-	•	Create/edit/publish “banner” messages (maintenance, incident updates, release notes)
-	•	Scheduled visibility windows (start/end)
-	•	Severity + affected services tagging
+---
 
-3) Submissions: incidents/bugs
-	•	Submit incident with structured fields:
-	•	service, platform_id, severity, environment, descript
-	
-	❗ NEEDS DECISION:
-	•	State transitions: Can any user change state? Or only assigned/triage owner?
-	•	Spam prevention: Rate limiting per user? Required fields validation?
-	•	Notifications: When should incident creator/owner be notified? (Phase 4 says "if required" but unclear)
-	•	Duplicate detection: Any validation/warning if similar incident exists?
-	•	Attachment support: Mentioned in Phase 4—will you support or explicitly disallow for MVP?ion, repro steps
-	•	Comment thread
-	
-	❗ NEEDS DECISION:
-	•	Voting visibility: Can users see vote counts before voting, or blind voting?
-	•	Vote weighting: Are all votes equal in MVP, or do you want role-based weights from day 1?
-	•	Rejection clarity: When rejected, is a reason/comment required?
-	•	State machine: New → Triaged → In Progress → Resolved → Closed
-	•	Audit columns on every change (created/updated/by/at)
+## Target architecture
 
-4) Submissions: improvements (feature request	
-	❗ CRITICAL GAPS:
-	•	Routing/assignment: How do requests get routed to the right team? Auto-tag based on service, or manual?
-	•	SLA tracking: Should these have SLOs/resolve-by dates like incidents?
-	•	Workflow: Are approval workflows required (e.g., manager approval before fulfillment)?
-	•	Integration: How does fulfillment happen? Manual ticket creation in external system (Jira, Azure DevOps)?
-	•	Cost implications: For provisioning requests—how do you prevent runaway resource requests?	•	Submit improvement request with category + expected value
-	•	Voting/rating (one vote per user per item; optional weighted roles later)
-	•	State machine: New → Under Review → Planned → In Delivery → Done / Rejected
+### Runtime + packaging
 
-5) “My platform” requests (service catalog-lite)
-	•	Request types (templates):
-	•	access to dataset/report
-	
-	❗ NEEDS DECISION:
-	•	Curation model: Who maintains roadmap? Single owner or open contributions?
-	•	Linking to requests: How do you link improvement #123 to roadmap item #5? Bidirectional or just lookup?
-	•	Visibility: Can all users see all roadmap items, or is there access control per theme/platform?
-	•	Accuracy: How do you prevent roadmap from drifting from actual delivery (ADO sync in Phase 5)?
-	•	onboarding a new source
-	•	refresh cadence change
-	•	workspace/project provisioning (if applicable)
-	•	Each request type enforces required fields
-	
-	❗ CRITICAL GAPS:
-	•	Git integration mechanism: Which repo? Auto-deploy on push (webhooks) or manual pull? Staging/approval workflow?
-	•	Markdown safety: How do you prevent malicious markdown/HTML? Sanitize or trusted repo only?
-	•	Glossary sourcing: Is this manually entered or integrated with a metadata store (Data Catalog)?
-	•	Search strategy: Full-text search for glossary terms? Fuzzy matching or exact?
-	•	Staleness handling: Glossary terms not updated—when do you deprecate/archive?
-	•	Same tables/states/comments/audit approach
+Recommended MVP: single origin app (FastAPI serves the React build as static assets).
 
-6) Roadmap page (Delta-only)
-	•	roadmap_items curated table:
-	•	theme, status, target quarter, linked requests
-	•	Views: Now / Next / Later
+- No external hosting dependency for the SPA.
+- Avoids CORS complexity.
+- Keeps "one internal URL" truly single URL.
+- Avoids runtime npm install needs (important if outbound is restricted).
 
-7) Docs + Business glossary
-	•	Git-backed markdown rendered in-app (docs)
-	•	Delta-backed glossary:
-	•	term, definition, steward/owner, related assets
+Databricks Apps runtime specifics that matter for planning:
 
-8) Lineage (low priority, but “combined when users see it”)
-	•	Phase later: show “Data asset” page that can aggregate:
-	•	Databricks lineage view (where available)
-	•	Fabric/Power BI lineage link (or summary)
-	•	Implement as a single “Asset” experience rather than separate lineage systems.
+- OS: Ubuntu 22.04; Python 3.11; Node.js 22.16.
+- Default compute: 2 vCPU / 6GB memory (configurable in beta).
+- Default env vars include `DATABRICKS_APP_PORT`, `DATABRICKS_HOST`, `DATABRICKS_CLIENT_ID`, `DATABRICKS_CLIENT_SECRET`.
 
-⸻
+### Data flow ("no external calls at request time")
 
-Delta-only data model (initial)
+- Scheduled ingestion job(s) run on a cadence (not the app).
+- They call:
+  - Databricks APIs / logs / warehouse health sources (your choice).
+  - Power BI/Fabric APIs (once networking + auth is defined).
+- Jobs write normalized results to Delta tables (`status_results`, etc.).
+- The portal reads those Delta tables to render status.
 
-Core tables (minimum):
-	•	status_checks, status_results, status_messages
-	•	incidents, requests (improvements), platform_requests
-	•	comments
-	•	votes
-	•	roadmap_items
-	•	platforms (definition of platform_id)
-	•	user_platform_map (user → platform(s) mapping) or derive from Entra group snapshots
+This keeps the app fast; failures show up as "stale/unknown" rather than user-facing timeouts.
 
-All tables include:
-	•	id, platform_id, state, created_at, created_by, updated_at, updated_by
+### Networking for external APIs (Power BI/Fabric)
 
-❗ CRITICAL MISSING DETAILS:
-	•	Primary/Foreign keys: No referential integrity defined. Missing foreign keys: incidents → platforms, votes → requests, comments → parent (incident/request), etc.
-	•	Cascading deletes: If a platform is deleted, what happens to incidents/requests? Soft delete or cascade?
-	•	Retention policy: How long do you keep resolved incidents / closed requests? Archive to cold storage?
-	•	Versioning: If status_checks SLA changes, how do you handle existing results? New version field?
-	•	User_platform_map freshness: Query live Entra groups or maintain snapshot? Sync frequency?
-	•	Data location: Which catalog + schema? Unity Catalog metastore name?
-	•	Indexes/partitioning: How are tables optimized for time-range queries (e.g., "last 7 days of incidents")?
-	•	Soft deletes: Should you implement soft deletes for auditability rather than hard deletes?
+When you enable outbound calls from ingestion jobs or the app, you'll likely need:
 
-⸻
+- NCC (stable egress) + network policies (domain allowlist / egress restriction).
+- If you restrict egress, plan allowlists for:
+  - Microsoft Entra token endpoints (login).
+  - Power BI / Fabric API domains.
+  - Optional: package registries if you still build dependencies at runtime.
 
-CROSS-CUTTING CONCERNS (Not yet addressed)
+---
 
-Role-Based Access Control (RBAC)
-	❗ CRITICAL MISSING: The entire document lacks permission definitions.
-	•	Can all users see all platforms? Incidents? Roadmap?
-	•	Who can create incidents vs. improvements vs. service requests?
-	•	Who can change state? Who can edit/delete?
-	•	Admin users: How do you identify them (Entra group, hardcoded list, Databricks workspace admins)?
-	•	Suggestion: Define roles early (Viewer, Contributor, Incident Triager, Admin, Service Owner).
+## Identity & authorization model
 
-Performance & Scalability
-	•	No query optimization strategy defined.
-	•	Caching: In-app (Flask), Redis, or materialized views?
-	•	Pagination: Large lists (100+ open incidents) need pagination; not mentioned.
-	•	Real-time updates: Is the app pull-based (user refreshes) or push (WebSocket/polling)?
-	•	Concurrent writes: How do you handle simultaneous state transitions on same incident?
+### App identity (service principal)
 
-Monitoring & Observability
-	•	No logging strategy for the portal itself.
-	•	Health checks: How do ops know if the portal is down/degraded?
-	•	Metrics: Request latency, error rate, job execution times?
-	•	Alerting: Which failures trigger alerts?
+Databricks Apps provides each app with a dedicated service principal identity and injects:
 
-Error Handling & Resilience
-	•	What if status ingestion job fails? Does app show "unknown" or cached data?
-	•	What if Git webhook for docs fails? Does old docs get served?
-	•	Timeout strategy: What's the max query time before timeout?
-	•	Graceful degradation: If one feature breaks, can others still work?
+- `DATABRICKS_CLIENT_ID` + `DATABRICKS_CLIENT_SECRET` for M2M OAuth.
+- `DATABRICKS_HOST` for workspace targeting.
 
-⸻
+This is perfect for your "overall information reads" and shared writes (tickets, comments, votes).
 
-Phase 0 — Foundation (week 1–2)
-	•	App skeleton: FastAPI + React SPA served from FastAPI
-	•	Auth wiring:
-	•	service principal auth via injected env vars  ￼
-	•	user attribution capture for submissions/votes (headers/context)  ￼
-	•	Delta schema + core tables + basic admin page for platform definitions
+Key implication: the app SP must be granted access to:
 
-Phase 1 — Status MVP (week 2–4)
-	•	Implement status ingestion jobs → status_results every ~5 minutes
-	•	Front page + status drilldown + manual status messages
-	•	Power BI/Fabric refresh status integrated via job → Delta (details depend on your API approach and network policy later)
+- the Unity Catalog tables it reads/writes
+- any SQL warehouse it uses for queries
 
-Phase 2 — Ticketing MVP (week 4–6)
-	•	Incidents: create + list + detail + comments + state transitions
-	•	Improvements: create + list + voting + basic prioritization views
-	•	“My platform requests”: request templates + routing tags
+### User attribution (headers)
 
-Phase 3 — Docs + Glossary (week 6–8)
-	•	Markdown renderer + navigation
-	•	Glossary search + term pages + stewardship fields
-	•	Link glossary terms to datasets/reports (via a lightweight asset registry)
+Databricks Apps forwards a specific set of headers from its reverse proxy:
 
-Phase 4 — Operational hardening (when needed)
-	•	Role-based admin views (moderation, spam control, editing)
-	•	Attachments (ADLS/Volumes pointers)
-	•	Notifications (Teams/email) if required
-	•	Performance: caching/materialized rollups
+- `X-Forwarded-User`, `X-Forwarded-Email`, `X-Forwarded-Preferred-Username`, etc.
 
-Phase 5 — Enhancements (future)
-	•	Hybrid with ADO (sync tickets both ways)
-	•	Combined lineage/asset pages; OBO if you later need user-scoped reads  ￼
+Practical recommendation for MVP:
+
+- Require `X-Forwarded-User` or `X-Forwarded-Email` for write operations (submit ticket, vote, comment).
+- If missing, return 401/403 rather than silently attributing to the app SP.
+
+### Optional later: On-behalf-of-user (OBO)
+
+Databricks supports user authorization (currently public preview) where the user's access token is forwarded in headers and the app can act with user permissions.
+
+For your current plan (no user-permissioned reads), you can defer OBO. But design your API/auth middleware so you can add it later without rewriting everything.
+
+---
+
+## Status ingestion: recommended pattern
+
+### Suggested ingestion sources
+
+Databricks health (choose one path now):
+
+- Workspace APIs (cluster/job/warehouse states).
+- Job run logs for pipelines.
+- SQL Warehouse health endpoints / query history / system tables.
+
+Power BI:
+
+- For dataset/semantic model freshness, the Power BI REST API exposes refresh history endpoints (example: "Datasets – Get Refresh History").
+- Authentication typically uses a Microsoft Entra app/service principal and tenant settings must allow service principals for API access (details vary by tenant policies).
+
+Fabric:
+
+- Fabric REST APIs exist and service principal support has been introduced; some admin scenarios require enabling service principal auth explicitly.
+
+### Job output contract (what gets written to Delta)
+
+Treat each ingest run as:
+
+1. Write a run record (`status_ingestion_runs`) at start (RUNNING).
+2. Write individual result records (`status_results`) as you compute.
+3. Update run record at end (SUCCESS/FAIL + error payload).
+4. Optional: compute rollups (`status_rollups`) for fast UI tiles.
+
+### Failure handling states (UI contract)
+
+Define deterministic UI behavior:
+
+- Healthy: last success within SLA threshold.
+- Degraded: late vs SLA (warning threshold).
+- Down/Critical: beyond critical threshold, or known failure.
+- Unknown: no recent data + ingestion failure OR never ingested.
+
+This avoids confusing "green but stale" scenarios.
+
+---
+
+## Delta-only backend: ticketing model
+
+Because Delta doesn't enforce referential integrity like an OLTP database, the simplest robust approach is:
+
+**Option A (recommended): current state + events**
+
+- `work_items` (current state for fast reads).
+- `work_item_events` (append-only audit log of every change).
+- `comments` (append-only).
+- `votes` (enforced uniqueness in code via `MERGE`).
+
+This gives you:
+
+- Auditability by design.
+- Concurrency safety (events append; current state updated with optimistic checks).
+- Easy "history" views later.
+
+**Option B: pure event-sourcing**
+
+- Only events; derive current state via views/materialized rollups.
+- More complex queries, but simplest write path.
+
+Either works. For an MVP that needs lists and filters, Option A is typically the best tradeoff.
+
+---
+
+## Recommended core schema (agent-friendly)
+
+Below is a minimal-but-complete schema blueprint that maps directly to your modules and solves the missing FK/retention/versioning gaps.
+
+### 1) Platform definitions
+
+- `platforms`
+  - `platform_id` (string, PK)
+  - `name`, `domain` (databricks/powerbi/fabric), `owner_group`, `sla_profile_id`
+  - `is_active`, `created_at/by`, `updated_at/by`
+
+### 2) Status
+
+- `status_checks`
+  - `check_id` (PK)
+  - `platform_id` (logical FK)
+  - `check_type` (freshness/availability/quality)
+  - `sla_minutes`, `warn_after_minutes`, `crit_after_minutes`
+  - `enabled`, `owner`, `version`, `created_at/by`, `updated_at/by`
+- `status_results` (append-only time series)
+  - `result_id` (PK)
+  - `check_id`, `platform_id`
+  - `measured_at`, `status` (green/yellow/red/unknown)
+  - `observed_value`, `message`, `error_payload`
+  - `ingestion_run_id`
+- `status_ingestion_runs`
+  - `ingestion_run_id` (PK)
+  - `source` (databricks/powerbi/fabric)
+  - `started_at`, `ended_at`, `state` (RUNNING/SUCCESS/FAIL), `error_summary`
+- `status_messages`
+  - `message_id` (PK)
+  - `severity`, `title`, `body_md`
+  - `start_at`, `end_at`
+  - `platform_tags` (array)
+  - `published_state`, `created_at/by`, `updated_at/by`
+
+### 3) Work intake (incidents, improvements, service requests)
+
+- `work_items`
+  - `item_id` (PK)
+  - `item_type` (INCIDENT / IMPROVEMENT / PLATFORM_REQUEST)
+  - `platform_id`, `service`, `environment`, `severity`
+  - `title`, `description_md`, `tags`
+  - `state`, `assigned_to`, `priority`, `due_at` (optional)
+  - `version` (int) for optimistic concurrency
+  - audit columns
+- `work_item_events` (append-only)
+  - `event_id` (PK)
+  - `item_id`
+  - `event_type` (CREATE / STATE_CHANGE / EDIT / ASSIGN / TAG / CLOSE / REJECT)
+  - `old_state`, `new_state`
+  - `payload` (json)
+  - `created_at/by`
+- `comments`
+  - `comment_id` (PK)
+  - `item_id`
+  - `body_md`
+  - audit columns
+- `votes`
+  - `item_id`
+  - `user_id` (from forwarded headers)
+  - `weight` (default 1)
+  - audit columns
+  - logical uniqueness: (`item_id`, `user_id`) enforced in API layer
+
+### 4) Docs + glossary
+
+- Docs: Git-backed markdown rendered by the app (no Delta required unless you want indexing).
+- `glossary_terms`
+  - `term_id` (PK)
+  - `term`, `definition_md`, `steward`, `domain`, `status` (active/deprecated)
+  - `related_assets` (array / json)
+  - audit columns
+
+### 5) Roadmap
+
+- `roadmap_items`
+  - `roadmap_id` (PK)
+  - `theme`, `status`, `target_quarter`, `description_md`
+  - `linked_item_ids` (array)
+  - audit columns
+
+### 6) RBAC / access control (don't skip this)
+
+- `role_bindings`
+  - `principal` (user id/email or group name)
+  - `role` (Viewer/Contributor/Triager/Admin/ServiceOwner)
+  - `platform_id` (nullable = global)
+
+This creates a simple, explicit authorization layer for the API.
+
+---
+
+## Best path forward (minimize risk early)
+
+### Step 1: Build the walking skeleton (Phase 0)
+
+Goal: app deploys, reads/writes Delta, shows a basic page.
+
+- FastAPI running on `DATABRICKS_APP_PORT`.
+- React SPA served by FastAPI (single origin).
+- Create UC schema + minimal tables: `platforms`, `status_messages`, `work_items`, `comments`.
+- Auth middleware:
+  - read `X-Forwarded-User`/`Email`
+  - deny writes if missing identity
+- Basic endpoints: `/api/v1/me`, `/api/v1/platforms`, `/api/v1/messages`, `/api/v1/work-items`.
+- Add `/api/v1/healthz` for ops readiness checks.
+
+### Step 2: Status MVP without Power BI first (Phase 1 core)
+
+Goal: deliver value even if Power BI/Fabric is blocked.
+
+- Ingestion job for Databricks-side checks only.
+- Populate `status_results` + `status_ingestion_runs`.
+- Front page tiles + drilldown + manual status banners.
+
+### Step 3: Power BI/Fabric feasibility spike (parallel to Phase 1)
+
+Goal: decide the viable integration approach early.
+
+- Confirm tenant-level prerequisites:
+  - API permissions + service principal enablement.
+- Confirm outbound connectivity approach (NCC / allowlists).
+- Implement one "vertical slice":
+  - Call Power BI "Get Refresh History".
+  - Write normalized refresh status to Delta.
+- For Fabric admin/update APIs, confirm service principal auth enablement requirements.
+
+### Step 4: Ticketing MVP (Phase 2)
+
+Goal: real internal support workflows.
+
+- Implement `work_items` + `work_item_events` + `comments` + `votes`.
+- State machines + permissions.
+- UI lists, detail views, filters, pagination.
+- Rate limiting / basic spam control (even if lightweight).
+
+### Step 5: Docs + glossary (Phase 3)
+
+Goal: reduce support load via self-service.
+
+- Docs rendering pipeline (Git → packaged content, or runtime pull if network allows).
+- Glossary CRUD + search + term pages.
+
+### Step 6: Hardening (Phase 4+)
+
+Goal: operational maturity.
+
+- RBAC admin UI.
+- Audit trails + structured logs.
+- Alerting on ingestion failure + portal errors.
+- Attachments (as pointers to Volumes/ADLS) + notification hooks.
+
+---
+
+## Decision checklist (pick defaults early)
+
+1. **SPA deployment model**
+   - Bundle React build into the app package (recommended for MVP).
+   - Host SPA separately (adds CORS + extra deployment surface).
+2. **API versioning**
+   - Use `/api/v1/...` from day 1 (recommended).
+   - No versioning (requires strict backward compatibility discipline).
+3. **Identity requirements for writes**
+   - Require `X-Forwarded-User` or `X-Forwarded-Email` for submissions/votes/comments (recommended).
+   - Allow "anonymous as app SP" (makes auditing and abuse control hard).
+4. **RBAC model**
+   - Define roles now (Viewer, Contributor, Triager, Admin, ServiceOwner).
+   - Decide: role bindings via Entra group snapshot vs manual table vs Databricks groups.
+5. **Status SLA & aggregation rules**
+   - SLA defined in `status_checks` and editable by admins (recommended).
+   - Global status = max severity OR weighted rollup (choose one).
+6. **Status retention**
+   - Decide time-series retention (e.g., 30/90/180 days) + rollups beyond that.
+7. **Job failure UX**
+   - Show stale last-success + "unknown" after TTL (recommended).
+   - Hard error state.
+8. **Power BI/Fabric integration approach**
+   - Power BI: which APIs/endpoints, scope (per workspace vs tenant admin), service principal model.
+   - Fabric: which items you care about; whether admin APIs are needed (and thus enablement).
+9. **Networking prerequisites**
+   - Will NCC + network policies be ready in Phase 1?
+   - If not, treat Power BI/Fabric as Phase 1b with a stubbed UI section.
+10. **Ticket data modeling**
+   - Unified `work_items` table with `item_type` (recommended).
+   - Separate incidents / requests / platform_requests tables.
+11. **Docs sourcing & safety**
+   - Package docs at build time (recommended under egress restrictions).
+   - Decide markdown sanitization model (trusted repo only vs sanitize HTML).
