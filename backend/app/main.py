@@ -12,11 +12,16 @@ from .api.v1.me import router as me_router
 from .auth.middleware import request_context_middleware
 from .core.config import get_settings
 from .core.error_handlers import register_error_handlers
+from .core.logging import configure_logging, request_logging_middleware
 
 
 def create_app() -> FastAPI:
+    settings = get_settings()
+    configure_logging(settings)
+
     app = FastAPI(title="Service Portal")
     app.middleware("http")(request_context_middleware)
+    app.middleware("http")(request_logging_middleware)
     register_error_handlers(app)
 
     app.include_router(health_router)
