@@ -31,31 +31,6 @@ def _order_by_created_desc(items: list) -> list:
     return sorted(items, key=lambda item: (item.created_at, item.id), reverse=True)
 
 
-@router.get("/platforms")
-def list_platforms(limit: int = 25, offset: int = 0) -> dict:
-    repo = get_repository()
-    platforms = _order_by_created_desc(list(repo.list_platforms()))
-    page, total, limit, offset = _paginate(platforms, limit, offset)
-    return {
-        "items": [asdict(platform) for platform in page],
-        "total": total,
-        "limit": limit,
-        "offset": offset,
-    }
-
-
-@router.get("/platforms/{platform_id}")
-def get_platform(platform_id: str) -> dict:
-    repo = get_repository()
-    platform = repo.get_platform(platform_id)
-    if platform is None:
-        raise HTTPException(
-            status_code=status.HTTP_404_NOT_FOUND,
-            detail="Platform not found",
-        )
-    return asdict(platform)
-
-
 @router.get("/status-checks")
 def list_status_checks(
     platform_id: Optional[str] = None, limit: int = 25, offset: int = 0

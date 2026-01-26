@@ -11,7 +11,9 @@ DEFAULT_PLATFORMS = (
         owner="Platform Ops",
         state="operational",
         created_at="2024-06-01T08:00:00Z",
+        created_by="seed",
         updated_at="2024-07-18T08:42:00Z",
+        updated_by="seed",
     ),
     Platform(
         id="platform-002",
@@ -19,7 +21,9 @@ DEFAULT_PLATFORMS = (
         owner="BI Enablement",
         state="monitoring",
         created_at="2024-05-20T08:00:00Z",
+        created_by="seed",
         updated_at="2024-07-18T08:30:00Z",
+        updated_by="seed",
     ),
     Platform(
         id="platform-003",
@@ -27,7 +31,9 @@ DEFAULT_PLATFORMS = (
         owner="Platform Ops",
         state="operational",
         created_at="2024-07-01T08:00:00Z",
+        created_by="seed",
         updated_at="2024-07-18T08:32:00Z",
+        updated_by="seed",
     ),
     Platform(
         id="platform-004",
@@ -35,7 +41,9 @@ DEFAULT_PLATFORMS = (
         owner="Data Engineering",
         state="monitoring",
         created_at="2024-06-15T08:00:00Z",
+        created_by="seed",
         updated_at="2024-07-18T08:25:00Z",
+        updated_by="seed",
     ),
     Platform(
         id="platform-005",
@@ -43,7 +51,9 @@ DEFAULT_PLATFORMS = (
         owner="Data Platform",
         state="monitoring",
         created_at="2024-06-10T08:00:00Z",
+        created_by="seed",
         updated_at="2024-07-18T07:55:00Z",
+        updated_by="seed",
     ),
 )
 

@@ -14,6 +14,9 @@ class PlatformRepository(Protocol):
     def get_platform(self, platform_id: str) -> Optional[Platform]:
         raise NotImplementedError
 
+    def create_platform(self, platform: Platform) -> Platform:
+        raise NotImplementedError
+
 
 class StatusRepository(Protocol):
     def list_status_checks(self, platform_id: Optional[str] = None) -> Sequence[StatusCheck]:

@@ -39,6 +39,10 @@ class LocalFixtureRepository(PlatformRepository, StatusRepository, WorkItemRepos
                 return platform
         return None
 
+    def create_platform(self, platform: Platform) -> Platform:
+        self._platforms.append(platform)
+        return platform
+
     def list_status_checks(self, platform_id: Optional[str] = None) -> Sequence[StatusCheck]:
         if not platform_id:
             return list(self._status_checks)

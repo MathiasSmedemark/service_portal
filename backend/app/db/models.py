@@ -13,7 +13,9 @@ class Platform:
     owner: str
     state: str
     created_at: str
+    created_by: str
     updated_at: str
+    updated_by: str
 
 
 @dataclass(frozen=True)
