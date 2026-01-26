@@ -27,12 +27,21 @@ def _paginate(items: list, limit: int, offset: int) -> tuple[list, int, int, int
     return items[offset : offset + limit], total, limit, offset
 
 
+def _order_by_created_desc(items: list) -> list:
+    return sorted(items, key=lambda item: (item.created_at, item.id), reverse=True)
+
+
 @router.get("/platforms")
 def list_platforms(limit: int = 25, offset: int = 0) -> dict:
     repo = get_repository()
-    items = [asdict(platform) for platform in repo.list_platforms()]
-    page, total, limit, offset = _paginate(items, limit, offset)
-    return {"items": page, "total": total, "limit": limit, "offset": offset}
+    platforms = _order_by_created_desc(list(repo.list_platforms()))
+    page, total, limit, offset = _paginate(platforms, limit, offset)
+    return {
+        "items": [asdict(platform) for platform in page],
+        "total": total,
+        "limit": limit,
+        "offset": offset,
+    }
 
 
 @router.get("/platforms/{platform_id}")
@@ -57,6 +66,32 @@ def list_status_checks(
     ]
     page, total, limit, offset = _paginate(checks, limit, offset)
     return {"items": page, "total": total, "limit": limit, "offset": offset}
+
+
+@router.get("/status-results")
+def list_status_results(limit: int = 25, offset: int = 0) -> dict:
+    repo = get_repository()
+    results = _order_by_created_desc(list(repo.list_status_results()))
+    page, total, limit, offset = _paginate(results, limit, offset)
+    return {
+        "items": [asdict(result) for result in page],
+        "total": total,
+        "limit": limit,
+        "offset": offset,
+    }
+
+
+@router.get("/status-messages")
+def list_status_messages(limit: int = 25, offset: int = 0) -> dict:
+    repo = get_repository()
+    messages = _order_by_created_desc(list(repo.list_status_messages()))
+    page, total, limit, offset = _paginate(messages, limit, offset)
+    return {
+        "items": [asdict(message) for message in page],
+        "total": total,
+        "limit": limit,
+        "offset": offset,
+    }
 
 
 @router.get("/work-items")

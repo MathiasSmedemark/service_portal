@@ -4,7 +4,7 @@ from app.db.connection import DatabricksSqlConnector, WarehouseConfig
 from app.db.databricks import DatabricksRepository
 from app.db.fixtures import LocalFixtureRepository
 from app.db.interfaces import PlatformRepository, StatusRepository, WorkItemRepository
-from app.db.models import Platform, StatusCheck, WorkItem
+from app.db.models import Platform, StatusCheck, StatusMessage, StatusResult, WorkItem
 from app.db.query import MockQueryRunner, QueryRunner, SqlQueryRunner
 
 __all__ = [
@@ -19,6 +19,8 @@ __all__ = [
     "QueryRunner",
     "SqlQueryRunner",
     "StatusCheck",
+    "StatusMessage",
+    "StatusResult",
     "WarehouseConfig",
     "WorkItem",
 ]

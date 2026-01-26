@@ -2,8 +2,10 @@
 -- Replace <catalog>.<schema> with your UC catalog/schema before execution.
 -- Assumptions:
 -- - state uses RUNNING/SUCCESS/FAIL.
+-- - platform_id is null for global runs that cover multiple platforms.
 CREATE TABLE IF NOT EXISTS <catalog>.<schema>.status_ingestion_runs (
     id STRING NOT NULL,
+    platform_id STRING,
     source STRING NOT NULL,
     state STRING NOT NULL,
     started_at TIMESTAMP NOT NULL,

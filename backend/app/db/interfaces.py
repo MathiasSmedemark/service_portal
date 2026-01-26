@@ -4,7 +4,7 @@ from __future__ import annotations
 
 from typing import Optional, Protocol, Sequence
 
-from app.db.models import Platform, StatusCheck, WorkItem
+from app.db.models import Platform, StatusCheck, StatusMessage, StatusResult, WorkItem
 
 
 class PlatformRepository(Protocol):
@@ -17,6 +17,12 @@ class PlatformRepository(Protocol):
 
 class StatusRepository(Protocol):
     def list_status_checks(self, platform_id: Optional[str] = None) -> Sequence[StatusCheck]:
+        raise NotImplementedError
+
+    def list_status_results(self) -> Sequence[StatusResult]:
+        raise NotImplementedError
+
+    def list_status_messages(self) -> Sequence[StatusMessage]:
         raise NotImplementedError
 
 
