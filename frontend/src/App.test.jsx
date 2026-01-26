@@ -3,9 +3,14 @@ import { MemoryRouter } from "react-router-dom";
 import { expect, it } from "vitest";
 import App from "./App.jsx";
 
+const routerFutureFlags = {
+  v7_startTransition: true,
+  v7_relativeSplatPath: true
+};
+
 it("renders the navigation shell", () => {
   render(
-    <MemoryRouter>
+    <MemoryRouter future={routerFutureFlags}>
       <App />
     </MemoryRouter>
   );

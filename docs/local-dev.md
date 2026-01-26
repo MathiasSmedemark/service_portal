@@ -27,6 +27,21 @@ Notes:
 - The Vite dev server proxies `/api/*` to `http://localhost:8000` (see `frontend/vite.config.js`).
 - The backend uses `DATABRICKS_APP_PORT` only when running `python -m app.main`; the `uvicorn` command above sets the port directly.
 
+## Convenience scripts
+
+From repo root:
+
+```bash
+./scripts/dev.sh
+./scripts/test.sh
+./scripts/format.sh
+./scripts/build.sh
+```
+
+Notes:
+- `dev.sh` starts both the frontend and backend in Mode A and uses `backend/.env` if it exists.
+- Scripts install missing dependencies automatically (`npm ci`, `uv sync --dev`).
+
 ## Local identity override (DEV_USER / DEV_EMAIL)
 
 Writes require user identity. In local Mode A, you can simulate identity by setting `DEV_USER` and/or `DEV_EMAIL`.

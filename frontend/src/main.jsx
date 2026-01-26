@@ -5,9 +5,13 @@ import App from "./App.jsx";
 import "./styles.css";
 
 const root = createRoot(document.getElementById("root"));
+const routerFutureFlags = {
+  v7_startTransition: true,
+  v7_relativeSplatPath: true
+};
 root.render(
   <React.StrictMode>
-    <BrowserRouter>
+    <BrowserRouter future={routerFutureFlags}>
       <App />
     </BrowserRouter>
   </React.StrictMode>
