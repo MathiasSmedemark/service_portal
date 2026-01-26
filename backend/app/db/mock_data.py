@@ -209,6 +209,17 @@ DEFAULT_STATUS_RESULTS = (
         ingestion_run_id="run-004",
     ),
     StatusResult(
+        id="result-009",
+        check_id="status-001",
+        platform_id="platform-001",
+        state="green",
+        measured_at="2024-07-18T09:10:00Z",
+        created_at="2024-07-18T09:11:00Z",
+        observed_value="freshness=4m",
+        message="Warehouse stable",
+        ingestion_run_id="run-005",
+    ),
+    StatusResult(
         id="result-002",
         check_id="status-004",
         platform_id="platform-001",

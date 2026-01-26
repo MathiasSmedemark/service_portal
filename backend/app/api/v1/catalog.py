@@ -31,19 +31,6 @@ def _order_by_created_desc(items: list) -> list:
     return sorted(items, key=lambda item: (item.created_at, item.id), reverse=True)
 
 
-@router.get("/status-results")
-def list_status_results(limit: int = 25, offset: int = 0) -> dict:
-    repo = get_repository()
-    results = _order_by_created_desc(list(repo.list_status_results()))
-    page, total, limit, offset = _paginate(results, limit, offset)
-    return {
-        "items": [asdict(result) for result in page],
-        "total": total,
-        "limit": limit,
-        "offset": offset,
-    }
-
-
 @router.get("/status-messages")
 def list_status_messages(limit: int = 25, offset: int = 0) -> dict:
     repo = get_repository()
