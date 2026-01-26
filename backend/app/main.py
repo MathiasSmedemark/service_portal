@@ -10,6 +10,7 @@ from fastapi import FastAPI, HTTPException, Request, status
 from fastapi.responses import JSONResponse
 from fastapi.staticfiles import StaticFiles
 
+from .api.v1.catalog import router as catalog_router
 from .api.v1.health import router as health_router
 from .auth.middleware import request_context_middleware
 
@@ -23,6 +24,7 @@ def create_app() -> FastAPI:
     app.middleware("http")(request_context_middleware)
 
     app.include_router(health_router)
+    app.include_router(catalog_router)
     _mount_spa(app)
 
     @app.exception_handler(HTTPException)
