@@ -11,6 +11,7 @@ from fastapi.staticfiles import StaticFiles
 
 from .api.v1.catalog import router as catalog_router
 from .api.v1.health import router as health_router
+from .api.v1.me import router as me_router
 from .auth.middleware import request_context_middleware
 from .core.config import get_settings
 
@@ -25,6 +26,7 @@ def create_app() -> FastAPI:
 
     app.include_router(health_router)
     app.include_router(catalog_router)
+    app.include_router(me_router)
     _mount_spa(app)
 
     @app.exception_handler(HTTPException)

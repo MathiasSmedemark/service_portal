@@ -27,3 +27,11 @@ def get_current_identity(request: Request) -> Identity:
             detail="Missing user identity",
         )
     return identity
+
+
+def get_optional_user(request: Request) -> Optional[Identity]:
+    return get_optional_identity(request)
+
+
+def get_current_user(request: Request) -> Identity:
+    return get_current_identity(request)
