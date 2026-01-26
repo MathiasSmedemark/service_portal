@@ -11,6 +11,8 @@ from starlette.exceptions import HTTPException as StarletteHTTPException
 
 from app.core.exceptions import AppError
 
+HTTP_422_UNPROCESSABLE = getattr(status, "HTTP_422_UNPROCESSABLE_CONTENT", 422)
+
 
 def _error_payload(code: str, message: str, request_id: Optional[str]) -> dict:
     return {"error": {"code": code, "message": message, "request_id": request_id}}
@@ -29,7 +31,7 @@ def _http_error_code(status_code: int) -> str:
         return "forbidden"
     if status_code == status.HTTP_409_CONFLICT:
         return "conflict"
-    if status_code == status.HTTP_422_UNPROCESSABLE_ENTITY:
+    if status_code == HTTP_422_UNPROCESSABLE:
         return "validation_error"
     return "http_error"
 
@@ -66,7 +68,7 @@ def register_error_handlers(app: FastAPI) -> None:
     ) -> JSONResponse:
         request_id = _get_request_id(request)
         response = JSONResponse(
-            status_code=status.HTTP_422_UNPROCESSABLE_ENTITY,
+            status_code=HTTP_422_UNPROCESSABLE,
             content=_error_payload("validation_error", "Validation error", request_id),
         )
         if request_id:
