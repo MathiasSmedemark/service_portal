@@ -2,7 +2,6 @@
 
 from __future__ import annotations
 
-import os
 from pathlib import Path
 from typing import Optional
 
@@ -13,6 +12,7 @@ from fastapi.staticfiles import StaticFiles
 from .api.v1.catalog import router as catalog_router
 from .api.v1.health import router as health_router
 from .auth.middleware import request_context_middleware
+from .core.config import get_settings
 
 
 def _error_payload(code: str, message: str, request_id: Optional[str]) -> dict:
@@ -72,5 +72,5 @@ app = create_app()
 if __name__ == "__main__":
     import uvicorn
 
-    port = int(os.getenv("DATABRICKS_APP_PORT", "8000"))
-    uvicorn.run(app, host="0.0.0.0", port=port)
+    settings = get_settings()
+    uvicorn.run(app, host="0.0.0.0", port=settings.databricks_app_port)

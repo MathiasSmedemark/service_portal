@@ -5,6 +5,7 @@ description = "Service portal backend"
 requires-python = ">=3.11"
 dependencies = [
   "fastapi>=0.110.0",
+  "pydantic-settings>=2.4.0",
   "uvicorn>=0.29.0",
 ]
 
@@ -14,4 +15,20 @@ package = false
 dev-dependencies = [
   "pytest>=7.4.0",
   "httpx>=0.25.0",
+  "ruff>=0.4.8",
+  "mypy>=1.10.0",
 ]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+
+[tool.ruff]
+line-length = 100
+target-version = "py311"
+
+[tool.ruff.lint]
+select = ["E", "F", "I"]
+
+[tool.mypy]
+python_version = "3.11"
+ignore_missing_imports = true

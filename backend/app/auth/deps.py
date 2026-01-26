@@ -2,18 +2,19 @@
 
 from __future__ import annotations
 
-import os
 from typing import Optional
 
 from fastapi import HTTPException, Request, status
 
 from app.auth.identity import Identity, extract_identity
+from app.core.config import get_settings
 
 
 def get_optional_identity(request: Request) -> Optional[Identity]:
     identity = getattr(request.state, "identity", None)
     if identity is None:
-        identity = extract_identity(request.headers, os.environ)
+        settings = get_settings()
+        identity = extract_identity(request.headers, settings)
         request.state.identity = identity
     return identity
 
