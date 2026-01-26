@@ -2,11 +2,26 @@
   "name": "service-portal-frontend",
   "private": true,
   "version": "0.0.0",
+  "type": "module",
   "scripts": {
-    "dev": "echo \"TODO: add Vite dev server\"",
-    "build": "echo \"TODO: add build\"",
+    "dev": "vite",
+    "build": "vite build",
+    "preview": "vite preview",
+    "test": "vitest run",
+    "test:watch": "vitest",
     "lint": "echo \"TODO: add lint\"",
-    "format": "echo \"TODO: add format\"",
-    "test": "echo \"TODO: add test\""
+    "format": "echo \"TODO: add format\""
+  },
+  "dependencies": {
+    "react": "^18.3.1",
+    "react-dom": "^18.3.1",
+    "react-router-dom": "^6.26.2"
+  },
+  "devDependencies": {
+    "@testing-library/react": "^14.3.1",
+    "@vitejs/plugin-react": "^4.3.2",
+    "jsdom": "^24.1.1",
+    "vite": "^5.4.3",
+    "vitest": "^1.6.0"
   }
 }

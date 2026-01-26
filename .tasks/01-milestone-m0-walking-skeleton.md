@@ -24,7 +24,7 @@ Steps:
 - Create backend/, frontend/, jobs/, infra/, docs/ directories.
 - Move legacy Flask app to legacy/ (or archive/) and add a short note.
 - Move app.yaml to infra/app.yaml and point to the new FastAPI entrypoint (placeholder ok until M0.T2).
-- Add placeholder backend/requirements.txt or pyproject.toml and frontend/package.json.
+- Add placeholder backend/pyproject.toml (uv) and frontend/package.json.
 - Update AGENTS.md layout section only if the structure deviates.
 Acceptance:
 - Repo tree matches AGENTS.md or AGENTS.md is updated.
@@ -34,7 +34,7 @@ Testing:
 Files:
 - infra/app.yaml
 - legacy/ (app.py, templates/)
-- backend/requirements.txt or pyproject.toml
+- backend/pyproject.toml
 - frontend/package.json
 - AGENTS.md (if needed)
 Done means:
@@ -144,7 +144,7 @@ Acceptance:
 Testing:
 - Run backend unit tests and frontend test runner.
 Files:
-- backend/pyproject.toml or backend/requirements.txt
+- backend/pyproject.toml
 - frontend/package.json
 - backend/tests/
 Done means:

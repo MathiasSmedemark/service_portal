@@ -18,9 +18,9 @@ npm run dev
 
 # Backend dev server (hot reload)
 cd ../backend
-python -m venv .venv && source .venv/bin/activate
-pip install -r requirements.txt
-uvicorn app.main:app --reload --port 8000
+uv venv
+uv sync --dev
+uv run uvicorn app.main:app --reload --port 8000
 ```
 
 Notes:
@@ -48,9 +48,10 @@ databricks apps run-local --prepare-environment --debug
 ```bash
 # Backend
 cd backend
-ruff check .
-ruff format .
-mypy .
+uv sync --dev
+uv run ruff check .
+uv run ruff format .
+uv run mypy .
 
 # Frontend
 cd ../frontend
@@ -63,7 +64,8 @@ npm run format
 ```bash
 # Backend
 cd backend
-pytest -q
+uv sync --dev
+uv run pytest -q
 
 # Frontend
 cd ../frontend
@@ -83,9 +85,10 @@ npm run build
 
 # Backend checks
 cd ../backend
-python -m compileall .
-ruff check .
-pytest -q
+uv sync --dev
+uv run python -m compileall .
+uv run ruff check .
+uv run pytest -q
 ```
 
 ### Deploy (Databricks Asset Bundle)
@@ -156,7 +159,7 @@ If the repo differs, update this section.
 │   │   ├── models/               # pydantic schemas
 │   │   └── services/             # domain logic (status, tickets, docs)
 │   ├── tests/
-│   └── requirements.txt
+│   └── pyproject.toml
 ├── frontend/                     # React SPA (Vite)
 │   ├── src/
 │   ├── public/
