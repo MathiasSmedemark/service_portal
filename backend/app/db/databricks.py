@@ -21,6 +21,15 @@ class DatabricksRepository(PlatformRepository, StatusRepository, WorkItemReposit
     def list_status_checks(self, platform_id: Optional[str] = None) -> Sequence[StatusCheck]:
         raise NotImplementedError("Databricks adapter not implemented yet")
 
+    def get_status_check(self, check_id: str) -> Optional[StatusCheck]:
+        raise NotImplementedError("Databricks adapter not implemented yet")
+
+    def create_status_check(self, status_check: StatusCheck) -> StatusCheck:
+        raise NotImplementedError("Databricks adapter not implemented yet")
+
+    def update_status_check(self, status_check: StatusCheck) -> StatusCheck:
+        raise NotImplementedError("Databricks adapter not implemented yet")
+
     def list_status_results(self) -> Sequence[StatusResult]:
         raise NotImplementedError("Databricks adapter not implemented yet")
 

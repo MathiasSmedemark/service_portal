@@ -23,11 +23,21 @@ class StatusCheck:
     id: str
     platform_id: str
     name: str
-    state: str
-    checked_at: str
-    message: str
+    check_type: str
+    owner_group: Optional[str]
+    description: Optional[str]
     sla_minutes: int
-    freshness_minutes: int
+    warn_after_minutes: int
+    crit_after_minutes: int
+    state: str
+    version: int
+    created_at: str
+    created_by: str
+    updated_at: str
+    updated_by: str
+    is_deleted: bool = False
+    deleted_at: Optional[str] = None
+    deleted_by: Optional[str] = None
 
 
 @dataclass(frozen=True)

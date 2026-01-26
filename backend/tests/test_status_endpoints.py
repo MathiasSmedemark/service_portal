@@ -51,5 +51,9 @@ def test_status_results_pagination_and_ordering() -> None:
     _assert_pagination("/api/v1/status-results")
 
 
+def test_status_checks_pagination_and_ordering() -> None:
+    _assert_pagination("/api/v1/status-checks")
+
+
 def test_status_messages_pagination_and_ordering() -> None:
     _assert_pagination("/api/v1/status-messages")

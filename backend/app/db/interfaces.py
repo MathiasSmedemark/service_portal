@@ -22,6 +22,15 @@ class StatusRepository(Protocol):
     def list_status_checks(self, platform_id: Optional[str] = None) -> Sequence[StatusCheck]:
         raise NotImplementedError
 
+    def get_status_check(self, check_id: str) -> Optional[StatusCheck]:
+        raise NotImplementedError
+
+    def create_status_check(self, status_check: StatusCheck) -> StatusCheck:
+        raise NotImplementedError
+
+    def update_status_check(self, status_check: StatusCheck) -> StatusCheck:
+        raise NotImplementedError
+
     def list_status_results(self) -> Sequence[StatusResult]:
         raise NotImplementedError
 

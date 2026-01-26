@@ -48,6 +48,23 @@ class LocalFixtureRepository(PlatformRepository, StatusRepository, WorkItemRepos
             return list(self._status_checks)
         return [item for item in self._status_checks if item.platform_id == platform_id]
 
+    def get_status_check(self, check_id: str) -> Optional[StatusCheck]:
+        for check in self._status_checks:
+            if check.id == check_id:
+                return check
+        return None
+
+    def create_status_check(self, status_check: StatusCheck) -> StatusCheck:
+        self._status_checks.append(status_check)
+        return status_check
+
+    def update_status_check(self, status_check: StatusCheck) -> StatusCheck:
+        for idx, item in enumerate(self._status_checks):
+            if item.id == status_check.id:
+                self._status_checks[idx] = status_check
+                return status_check
+        raise KeyError(f"Status check {status_check.id} not found")
+
     def list_status_results(self) -> Sequence[StatusResult]:
         return list(self._status_results)
 

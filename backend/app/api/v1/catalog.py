@@ -31,18 +31,6 @@ def _order_by_created_desc(items: list) -> list:
     return sorted(items, key=lambda item: (item.created_at, item.id), reverse=True)
 
 
-@router.get("/status-checks")
-def list_status_checks(
-    platform_id: Optional[str] = None, limit: int = 25, offset: int = 0
-) -> dict:
-    repo = get_repository()
-    checks = [
-        asdict(check) for check in repo.list_status_checks(platform_id=platform_id)
-    ]
-    page, total, limit, offset = _paginate(checks, limit, offset)
-    return {"items": page, "total": total, "limit": limit, "offset": offset}
-
-
 @router.get("/status-results")
 def list_status_results(limit: int = 25, offset: int = 0) -> dict:
     repo = get_repository()

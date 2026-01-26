@@ -10,6 +10,7 @@ from .api.v1.catalog import router as catalog_router
 from .api.v1.health import router as health_router
 from .api.v1.me import router as me_router
 from .api.v1.platforms import router as platforms_router
+from .api.v1.status_checks import router as status_checks_router
 from .auth.middleware import request_context_middleware
 from .core.config import get_settings
 from .core.error_handlers import register_error_handlers
@@ -27,6 +28,7 @@ def create_app() -> FastAPI:
 
     app.include_router(health_router)
     app.include_router(platforms_router)
+    app.include_router(status_checks_router)
     app.include_router(catalog_router)
     app.include_router(me_router)
     _mount_spa(app)
