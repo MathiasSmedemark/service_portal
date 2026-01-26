@@ -3,7 +3,7 @@ import Docs from "./pages/Docs.jsx";
 import Glossary from "./pages/Glossary.jsx";
 import NotFound from "./pages/NotFound.jsx";
 import Roadmap from "./pages/Roadmap.jsx";
-import Status from "./pages/Status.jsx";
+import StatusDashboard from "./pages/StatusDashboard.tsx";
 import Tickets from "./pages/Tickets.jsx";
 
 const navItems = [
@@ -60,7 +60,7 @@ function App() {
 
         <main className="content">
           <Routes>
-            <Route path="/" element={<Status />} />
+            <Route path="/" element={<StatusDashboard />} />
             <Route path="/tickets" element={<Tickets />} />
             <Route path="/docs" element={<Docs />} />
             <Route path="/glossary" element={<Glossary />} />
