@@ -167,6 +167,10 @@ If the repo differs, update this section.
 ├── infra/
 │   ├── databricks.yml            # asset bundle
 │   └── app.yaml                  # app command + env/resources
+├── legacy/                       # archived Flask prototype
+│   ├── app.py
+│   ├── templates/
+│   └── requirements.txt
 └── docs/                         # user-facing docs (markdown)
 ```
 

@@ -1,0 +1,12 @@
+{
+  "name": "service-portal-frontend",
+  "private": true,
+  "version": "0.0.0",
+  "scripts": {
+    "dev": "echo \"TODO: add Vite dev server\"",
+    "build": "echo \"TODO: add build\"",
+    "lint": "echo \"TODO: add lint\"",
+    "format": "echo \"TODO: add format\"",
+    "test": "echo \"TODO: add test\""
+  }
+}
