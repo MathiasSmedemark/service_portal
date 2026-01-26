@@ -27,6 +27,16 @@ Notes:
 - The Vite dev server proxies `/api/*` to `http://localhost:8000` (see `frontend/vite.config.js`).
 - The backend uses `DATABRICKS_APP_PORT` only when running `python -m app.main`; the `uvicorn` command above sets the port directly.
 
+## Local demo data (status)
+
+Mode A uses in-memory fixtures for the status endpoints, so you can demo without
+Databricks. Update `backend/app/db/mock_data.py` to adjust platforms, checks,
+results, or messages, then restart the backend (or let `uvicorn --reload` pick it up).
+
+Quick scenarios:
+- Stale checks: set `freshness_minutes` higher than `sla_minutes`.
+- Degraded or critical checks: set `state` to `warning` or `down`.
+
 ## Convenience scripts
 
 From repo root:
