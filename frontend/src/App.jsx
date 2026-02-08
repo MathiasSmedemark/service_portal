@@ -25,6 +25,21 @@ function App() {
             <p className="brand-subtitle">Signals, incidents, and platform requests in one place.</p>
           </div>
         </div>
+        <nav className="topbar-nav">
+          {navItems.map((item, index) => (
+            <NavLink
+              key={item.path}
+              to={item.path}
+              className={({ isActive }) =>
+                isActive ? "nav-link active" : "nav-link"
+              }
+              style={{ "--i": index }}
+              end={item.path === "/"}
+            >
+              {item.label}
+            </NavLink>
+          ))}
+        </nav>
         <div className="status-chip">
           <span className="status-dot" />
           Environment: Local
@@ -32,33 +47,14 @@ function App() {
       </header>
 
       <div className="layout">
-        <aside className="sidebar">
-          <p className="sidebar-title">Navigate</p>
-          <nav className="nav-list">
-            {navItems.map((item, index) => (
-              <NavLink
-                key={item.path}
-                to={item.path}
-                className={({ isActive }) =>
-                  isActive ? "nav-link active" : "nav-link"
-                }
-                style={{ "--i": index }}
-                end={item.path === "/"}
-              >
-                {item.label}
-              </NavLink>
-            ))}
-          </nav>
-          <div className="sidebar-card">
-            <p className="sidebar-card-title">Today&apos;s pulse</p>
-            <p className="sidebar-card-body">
+        <main className="content">
+          <div className="pulse-card">
+            <p className="pulse-card-title">Today&apos;s pulse</p>
+            <p className="pulse-card-body">
               Status checks run every 5 minutes. Expect occasional delays during
               maintenance windows.
             </p>
           </div>
-        </aside>
-
-        <main className="content">
           <Routes>
             <Route path="/" element={<StatusDashboard />} />
             <Route path="/tickets" element={<Tickets />} />
